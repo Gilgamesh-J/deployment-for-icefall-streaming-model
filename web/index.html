@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Local CPU Streaming ASR Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6efe4;
+        --ink: #19231f;
+        --muted: #66736d;
+        --card: rgba(255, 252, 246, 0.88);
+        --line: rgba(36, 51, 45, 0.16);
+        --accent: #2f7d68;
+        --accent-2: #d8843d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-serif, Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 12%, rgba(216, 132, 61, 0.28), transparent 34rem),
+          radial-gradient(circle at 82% 18%, rgba(47, 125, 104, 0.24), transparent 30rem),
+          linear-gradient(135deg, #f6efe4 0%, #edf3ec 100%);
+      }
+
+      main {
+        width: min(980px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 56px 0;
+      }
+
+      .hero {
+        display: grid;
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(40px, 8vw, 82px);
+        line-height: 0.92;
+        letter-spacing: -0.055em;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.6;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 26px;
+        background: var(--card);
+        box-shadow: 0 30px 80px rgba(40, 45, 38, 0.14);
+        backdrop-filter: blur(18px);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 22px;
+      }
+
+      button,
+      input {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 12px 18px;
+        font: inherit;
+        background: rgba(255, 255, 255, 0.68);
+        color: var(--ink);
+      }
+
+      button {
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button.primary {
+        color: white;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent), #1e5e50);
+      }
+
+      button.stop {
+        color: white;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent-2), #a54d2f);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+      }
+
+      input {
+        min-width: 260px;
+        flex: 1;
+      }
+
+      .status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 12px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.52);
+        font-size: 14px;
+      }
+
+      .meter {
+        height: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(25, 35, 31, 0.08);
+        margin-bottom: 22px;
+      }
+
+      .meter > div {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 80ms linear;
+      }
+
+      .transcript {
+        min-height: 260px;
+        max-height: 52vh;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 22px;
+        background: rgba(255, 255, 255, 0.58);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 22px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+      }
+
+      .label {
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <h1>Local CPU Streaming ASR</h1>
+        <p>
+          A minimal browser demo for the bundled sherpa-onnx WebSocket server.
+          Start the CPU ASR server first, then press Start and speak.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="controls">
+          <input id="wsUrl" value="ws://127.0.0.1:8766" />
+          <button id="startBtn" class="primary">Start</button>
+          <button id="stopBtn" class="stop" disabled>Stop</button>
+        </div>
+
+        <div class="status">
+          <span class="pill">Status: <strong id="status">idle</strong></span>
+          <span class="pill">Audio: <strong>16 kHz mono int16 PCM</strong></span>
+          <span class="pill">Chunk: <strong>100 ms</strong></span>
+        </div>
+
+        <div class="meter"><div id="level"></div></div>
+
+        <div class="label">Transcript</div>
+        <div id="transcript" class="transcript">Waiting for speech...</div>
+      </section>
+    </main>
+
+    <script>
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const statusEl = document.getElementById("status");
+      const levelEl = document.getElementById("level");
+      const transcriptEl = document.getElementById("transcript");
+      const wsUrlEl = document.getElementById("wsUrl");
+
+      let ws = null;
+      let audioContext = null;
+      let processor = null;
+      let source = null;
+      let mediaStream = null;
+      let inputBuffer = [];
+      let finalText = "";
+      let partialText = "";
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function renderTranscript() {
+        const text = [finalText, partialText].filter(Boolean).join("\n");
+        transcriptEl.textContent = text || "Listening...";
+        transcriptEl.scrollTop = transcriptEl.scrollHeight;
+      }
+
+      function downsampleTo16k(float32, inputRate) {
+        const targetRate = 16000;
+        if (inputRate === targetRate) return float32;
+        const ratio = inputRate / targetRate;
+        const outputLength = Math.floor(float32.length / ratio);
+        const output = new Float32Array(outputLength);
+        for (let i = 0; i < outputLength; i += 1) {
+          const start = Math.floor(i * ratio);
+          const end = Math.min(Math.floor((i + 1) * ratio), float32.length);
+          let sum = 0;
+          let count = 0;
+          for (let j = start; j < end; j += 1) {
+            sum += float32[j];
+            count += 1;
+          }
+          output[i] = count ? sum / count : 0;
+        }
+        return output;
+      }
+
+      function floatToInt16(float32) {
+        const buffer = new ArrayBuffer(float32.length * 2);
+        const view = new DataView(buffer);
+        for (let i = 0; i < float32.length; i += 1) {
+          const sample = Math.max(-1, Math.min(1, float32[i]));
+          view.setInt16(i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        }
+        return buffer;
+      }
+
+      function pushSamples(samples) {
+        for (let i = 0; i < samples.length; i += 1) inputBuffer.push(samples[i]);
+        const chunkSize = 1600;
+        while (inputBuffer.length >= chunkSize) {
+          const chunk = inputBuffer.splice(0, chunkSize);
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(floatToInt16(Float32Array.from(chunk)));
+          }
+        }
+      }
+
+      async function start() {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        finalText = "";
+        partialText = "";
+        renderTranscript();
+        setStatus("connecting");
+
+        ws = new WebSocket(wsUrlEl.value.trim());
+        ws.onopen = async () => {
+          ws.send(JSON.stringify({ type: "start", sample_rate: 16000 }));
+          setStatus("recording");
+
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              channelCount: 1,
+              echoCancellation: true,
+              noiseSuppression: false,
+              autoGainControl: true,
+            },
+          });
+
+          audioContext = new AudioContext();
+          source = audioContext.createMediaStreamSource(mediaStream);
+          processor = audioContext.createScriptProcessor(4096, 1, 1);
+          processor.onaudioprocess = (event) => {
+            const input = event.inputBuffer.getChannelData(0);
+            let sum = 0;
+            for (let i = 0; i < input.length; i += 1) sum += input[i] * input[i];
+            const rms = Math.sqrt(sum / input.length);
+            levelEl.style.width = `${Math.min(100, Math.round(rms * 500))}%`;
+            pushSamples(downsampleTo16k(input, audioContext.sampleRate));
+          };
+          source.connect(processor);
+          processor.connect(audioContext.destination);
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === "partial") {
+            partialText = data.text || "";
+            renderTranscript();
+          } else if (data.type === "final") {
+            finalText = data.text || finalText;
+            partialText = "";
+            renderTranscript();
+            setStatus("final");
+          } else if (data.type === "error") {
+            setStatus(`error: ${data.text}`);
+          }
+        };
+
+        ws.onclose = () => {
+          if (statusEl.textContent !== "final") setStatus("closed");
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        };
+
+        ws.onerror = () => {
+          setStatus("websocket error");
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        };
+      }
+
+      async function stop() {
+        setStatus("stopping");
+        if (processor) processor.disconnect();
+        if (source) source.disconnect();
+        if (audioContext) await audioContext.close();
+        if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
+        levelEl.style.width = "0%";
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "end" }));
+          setTimeout(() => ws.close(), 1200);
+        }
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+
+      startBtn.addEventListener("click", start);
+      stopBtn.addEventListener("click", stop);
+    </script>
+  </body>
+</html>

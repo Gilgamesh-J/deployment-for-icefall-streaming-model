@@ -1,0 +1,17 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+
+# Runtime-added model files can be very large.
+model/*.onnx
+model/tokens.txt
+models/*
+!models/.gitkeep
+
+# Local logs and ad-hoc outputs.
+*.log
+*.tmp
+dist/
+*.tar.gz
+*.zip
