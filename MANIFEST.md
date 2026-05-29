@@ -17,15 +17,23 @@ This repository contains deployment code for local CPU streaming ASR demos. It d
 ## Scripts
 
 - `scripts/install_cpu_env.sh`: create `.venv` and install dependencies
+- `scripts/install_cpu_env.ps1`: Windows PowerShell equivalent for environment setup
 - `scripts/check_env.py`: verify Python packages and deployment files
 - `scripts/model_admin.py`: add/list/resolve/remove registered models
 - `scripts/add_model.sh`: copy a model into `models/<model_id>/` and update `models.json`
+- `scripts/add_model.ps1`: Windows PowerShell equivalent for adding models
 - `scripts/list_models.sh`: list registered models
+- `scripts/list_models.ps1`: Windows PowerShell equivalent for listing models
 - `scripts/remove_model.sh`: remove registered models
+- `scripts/remove_model.ps1`: Windows PowerShell equivalent for removing models
 - `scripts/run_server_cpu.sh`: start CPU WebSocket ASR server
+- `scripts/run_server_cpu.ps1`: Windows PowerShell equivalent for starting ASR server
 - `scripts/run_wav_client.sh`: test with a WAV file
+- `scripts/run_wav_client.ps1`: Windows PowerShell equivalent for WAV testing
 - `scripts/run_web_demo.sh`: serve browser demo at `http://127.0.0.1:7860`
+- `scripts/run_web_demo.ps1`: Windows PowerShell equivalent for serving browser demo
 - `scripts/package.sh`: create a source package without local model weights
+- `scripts/windows_common.ps1`: shared Windows PowerShell helpers
 
 ## Registry and Docs
 

@@ -14,12 +14,19 @@ Browser demo:  http://127.0.0.1:0000
 系统说明：
 
 ```text
-推荐系统：macOS / Linux / Windows WSL2
-本文主流程：面向 macOS 和 Linux shell 环境开发
-Windows 用户：建议使用 WSL2，不建议直接在原生 PowerShell/CMD 中照抄命令
+macOS / Linux / Windows WSL2：使用 scripts/*.sh
+Windows 原生 PowerShell：使用 scripts/*.ps1
+不建议在原生 Windows CMD 里直接照抄 bash 命令
 ```
 
-如果你使用 Windows，推荐先安装 WSL2 Ubuntu，然后在 WSL2 终端中执行下面的命令。这样 `bash`、`.venv`、`python3`、`scripts/*.sh` 的行为和本文保持一致。
+如果你使用 Windows，有两种方式：
+
+```text
+方式 A：安装 WSL2 Ubuntu，然后照 macOS / Linux 命令运行
+方式 B：直接使用 Windows PowerShell，执行 .ps1 脚本
+```
+
+### 1.1 macOS / Linux / Windows WSL2
 
 下载部署代码：
 
@@ -69,6 +76,47 @@ ws://127.0.0.1:0000
 ```
 
 点击 `Start`，允许麦克风权限，即可开始实时识别。
+
+### 1.2 Windows 原生 PowerShell
+
+打开 PowerShell：
+
+```powershell
+git clone https://github.com/Gilgamesh-J/deployment-for-icefall-streaming-model.git
+cd deployment-for-icefall-streaming-model
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+安装本机 CPU 环境：
+
+```powershell
+.\scripts\install_cpu_env.ps1
+```
+
+导入模型：
+
+```powershell
+.\scripts\add_model.ps1 `
+  --source-dir C:\path\to\your_model_dir `
+  --model-id my_model `
+  --label "My ASR Model"
+```
+
+启动 ASR WebSocket：
+
+```powershell
+.\scripts\run_server_cpu.ps1 -ModelId my_model
+```
+
+另开一个 PowerShell，启动浏览器页面：
+
+```powershell
+cd deployment-for-icefall-streaming-model
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\run_web_demo.ps1
+```
+
+然后在浏览器打开上文的 Browser demo 地址，并确认 WebSocket URL 和 ASR WebSocket 地址一致。
 
 ## 2. 需要什么文件
 
@@ -138,7 +186,12 @@ deployment-for-icefall-streaming-model/
 │   ├── remove_model.sh
 │   ├── run_server_cpu.sh
 │   ├── run_wav_client.sh
-│   └── run_web_demo.sh
+│   ├── run_web_demo.sh
+│   ├── install_cpu_env.ps1
+│   ├── add_model.ps1
+│   ├── run_server_cpu.ps1
+│   ├── run_wav_client.ps1
+│   └── run_web_demo.ps1
 ├── web/
 │   └── index.html
 ├── examples/
@@ -165,6 +218,7 @@ deployment-for-icefall-streaming-model/
 | `scripts/run_server_cpu.sh` | 启动 CPU ASR WebSocket |
 | `scripts/run_wav_client.sh` | 用 WAV 测试 ASR 服务 |
 | `scripts/run_web_demo.sh` | 启动本地网页服务 |
+| `scripts/*.ps1` | Windows PowerShell 对应脚本 |
 | `models.json` | 模型注册表，初始为空 |
 
 模型导入后会被复制到：
@@ -181,7 +235,7 @@ models/<model_id>/
 
 ## 4. 如何部署
 
-下面命令默认在 macOS、Linux 或 Windows WSL2 里执行。原生 Windows PowerShell/CMD 没有作为本文的主测试路径。
+下面先给 macOS / Linux / Windows WSL2 的 bash 命令；Windows 原生 PowerShell 命令见 `4.5`。
 
 ### 4.1 安装环境
 
@@ -320,6 +374,50 @@ bash scripts/run_wav_client.sh /path/to/test.wav
 SERVER_URI=ws://127.0.0.1:0000 bash scripts/run_wav_client.sh examples/sample_zh.wav
 ```
 
+### 4.5 Windows 原生 PowerShell 对应命令
+
+安装环境：
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\install_cpu_env.ps1
+```
+
+导入模型：
+
+```powershell
+.\scripts\add_model.ps1 `
+  --source-dir C:\path\to\your_model_dir `
+  --model-id my_model `
+  --label "My ASR Model"
+```
+
+查看模型：
+
+```powershell
+.\scripts\list_models.ps1
+```
+
+启动 ASR WebSocket：
+
+```powershell
+.\scripts\run_server_cpu.ps1 -ModelId my_model
+```
+
+换端口或线程：
+
+```powershell
+.\scripts\run_server_cpu.ps1 -ModelId my_model -Port 0000
+.\scripts\run_server_cpu.ps1 -ModelId my_model -NumThreads 4
+.\scripts\run_server_cpu.ps1 -ModelId my_model -DryRun
+```
+
+测试 WAV：
+
+```powershell
+.\scripts\run_wav_client.ps1 examples\sample_zh.wav
+```
+
 ## 5. 如何交互到浏览器上
 
 保持 ASR WebSocket 终端继续运行。
@@ -373,6 +471,13 @@ http://127.0.0.1:0000
 
 不要直接双击打开 `web/index.html`。请使用 `http://127.0.0.1:0000`，否则浏览器可能限制麦克风权限。
 
+Windows 原生 PowerShell 对应命令：
+
+```powershell
+.\scripts\run_web_demo.ps1
+.\scripts\run_web_demo.ps1 -WebPort 0000
+```
+
 ## 6. 最短命令总结
 
 终端 1：
@@ -402,4 +507,29 @@ bash scripts/run_web_demo.sh
 
 ```text
 http://127.0.0.1:0000
+```
+
+Windows 原生 PowerShell 最短命令：
+
+```powershell
+git clone https://github.com/Gilgamesh-J/deployment-for-icefall-streaming-model.git
+cd deployment-for-icefall-streaming-model
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+.\scripts\install_cpu_env.ps1
+
+.\scripts\add_model.ps1 `
+  --source-dir C:\path\to\your_model_dir `
+  --model-id my_model `
+  --label "My ASR Model"
+
+.\scripts\run_server_cpu.ps1 -ModelId my_model
+```
+
+另一个 PowerShell：
+
+```powershell
+cd deployment-for-icefall-streaming-model
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\run_web_demo.ps1
 ```

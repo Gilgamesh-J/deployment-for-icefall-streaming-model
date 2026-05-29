@@ -13,6 +13,8 @@ The repository contains only deployment code. It does not include large ONNX mod
 
 ## Quick Start
 
+### macOS / Linux / Windows WSL2
+
 Clone the repository:
 
 ```bash
@@ -61,6 +63,45 @@ ws://127.0.0.1:8766
 ```
 
 Click `Start`, allow microphone access, and speak.
+
+### Windows PowerShell
+
+Open PowerShell, then run:
+
+```powershell
+git clone https://github.com/Gilgamesh-J/deployment-for-icefall-streaming-model.git
+cd deployment-for-icefall-streaming-model
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+.\scripts\install_cpu_env.ps1
+
+.\scripts\add_model.ps1 `
+  --source-dir C:\path\to\your_model_dir `
+  --model-id my_model `
+  --label "My ASR Model"
+
+.\scripts\run_server_cpu.ps1 -ModelId my_model
+```
+
+Open a second PowerShell window:
+
+```powershell
+cd deployment-for-icefall-streaming-model
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\run_web_demo.ps1
+```
+
+Open:
+
+```text
+http://127.0.0.1:7860
+```
+
+Keep the WebSocket URL as:
+
+```text
+ws://127.0.0.1:8766
+```
 
 ## Required Model Files
 
@@ -138,10 +179,12 @@ Recommended environment:
 
 | Item | Requirement |
 |---|---|
-| OS | macOS / Linux / Windows WSL2 |
+| OS | macOS / Linux / Windows WSL2 / Windows PowerShell |
 | Python | 3.9 or newer |
 | Runtime | CPU |
 | Browser | Chrome / Edge / Safari |
+
+For native Windows PowerShell, use the `.ps1` scripts. For macOS, Linux, and WSL2, use the `.sh` scripts.
 
 Install:
 
@@ -165,6 +208,14 @@ package soundfile: ok
 package librosa: ok
 package sherpa_onnx: ok
 file models.json: ok
+```
+
+Windows PowerShell equivalent:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\install_cpu_env.ps1
+.\.venv\Scripts\python.exe scripts\check_env.py
 ```
 
 ## Add a Model
@@ -192,6 +243,17 @@ List registered models:
 
 ```bash
 bash scripts/list_models.sh
+```
+
+Windows PowerShell equivalent:
+
+```powershell
+.\scripts\add_model.ps1 `
+  --source-dir C:\path\to\your_model_dir `
+  --model-id my_model `
+  --label "My ASR Model"
+
+.\scripts\list_models.ps1
 ```
 
 If the source folder contains multiple candidate files, specify the exact files:
@@ -237,6 +299,15 @@ Print the resolved command without starting the server:
 MODEL_ID=my_model DRY_RUN=1 bash scripts/run_server_cpu.sh
 ```
 
+Windows PowerShell equivalent:
+
+```powershell
+.\scripts\run_server_cpu.ps1 -ModelId my_model
+.\scripts\run_server_cpu.ps1 -ModelId my_model -Port 8777
+.\scripts\run_server_cpu.ps1 -ModelId my_model -NumThreads 4
+.\scripts\run_server_cpu.ps1 -ModelId my_model -DryRun
+```
+
 ## Test with a WAV File
 
 Keep the ASR server running. Open another terminal:
@@ -258,6 +329,19 @@ Use your own WAV:
 
 ```bash
 bash scripts/run_wav_client.sh /path/to/test.wav
+```
+
+Windows PowerShell equivalent:
+
+```powershell
+.\scripts\run_wav_client.ps1 examples\sample_zh.wav
+```
+
+If the server runs on another port:
+
+```powershell
+$env:SERVER_URI = "ws://127.0.0.1:8777"
+.\scripts\run_wav_client.ps1 examples\sample_zh.wav
 ```
 
 ## Browser Interaction
@@ -300,6 +384,13 @@ http://127.0.0.1:7861
 ```
 
 Do not open `web/index.html` directly with `file://`; browser microphone permissions may be blocked. Use `http://127.0.0.1:7860`.
+
+Windows PowerShell equivalent:
+
+```powershell
+.\scripts\run_web_demo.ps1
+.\scripts\run_web_demo.ps1 -WebPort 7861
+```
 
 ## Notes on Model Files
 
