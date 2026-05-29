@@ -5,11 +5,21 @@
 最终会启动两个本机服务：
 
 ```text
-ASR WebSocket: ws://127.0.0.1:8766
-Browser demo:  http://127.0.0.1:7860
+ASR WebSocket: ws://127.0.0.1:0000
+Browser demo:  http://127.0.0.1:0000
 ```
 
 ## 1. Quick Start
+
+系统说明：
+
+```text
+推荐系统：macOS / Linux / Windows WSL2
+本文主流程：面向 macOS 和 Linux shell 环境开发
+Windows 用户：建议使用 WSL2，不建议直接在原生 PowerShell/CMD 中照抄命令
+```
+
+如果你使用 Windows，推荐先安装 WSL2 Ubuntu，然后在 WSL2 终端中执行下面的命令。这样 `bash`、`.venv`、`python3`、`scripts/*.sh` 的行为和本文保持一致。
 
 下载部署代码：
 
@@ -49,13 +59,13 @@ bash scripts/run_web_demo.sh
 浏览器打开：
 
 ```text
-http://127.0.0.1:7860
+http://127.0.0.1:0000
 ```
 
 确认页面里的 WebSocket URL 是：
 
 ```text
-ws://127.0.0.1:8766
+ws://127.0.0.1:0000
 ```
 
 点击 `Start`，允许麦克风权限，即可开始实时识别。
@@ -107,25 +117,7 @@ your_model_dir/
 └── tokens*.txt
 ```
 
-例子：
-
-```text
-my_streaming_model/
-├── encoder-iter-96000-avg-3-chunk-48-left-256.onnx
-├── decoder-iter-96000-avg-3-chunk-48-left-256.onnx
-├── joiner-iter-96000-avg-3-chunk-48-left-256.onnx
-└── tokens.txt
-```
-
-注意：
-
-```text
-encoder / decoder / joiner / tokens 必须来自同一套模型
-不要混用其他模型的 tokens.txt
-ONNX 文件不能是 Git LFS pointer
-```
-
-如果 `.onnx` 只有几百字节或几 KB，通常不是完整模型，而是 Git LFS pointer 或下载不完整的文件。
+如果 `.onnx` 只有几百字节或几 KB，通常不是完整模型。
 
 ## 3. 仓库结构
 
@@ -188,6 +180,8 @@ models/<model_id>/
 这些本地模型文件默认被 `.gitignore` 忽略，不会被提交到 GitHub。
 
 ## 4. 如何部署
+
+下面命令默认在 macOS、Linux 或 Windows WSL2 里执行。原生 Windows PowerShell/CMD 没有作为本文的主测试路径。
 
 ### 4.1 安装环境
 
@@ -274,9 +268,9 @@ MODEL_ID=my_model bash scripts/run_server_cpu.sh
 
 ```text
 Starting model: my_model
-WebSocket: ws://127.0.0.1:8766
+WebSocket: ws://127.0.0.1:0000
 CPU threads: 1
-server started at ws://127.0.0.1:8766
+server started at ws://127.0.0.1:0000
 ```
 
 这个终端不要关闭。
@@ -284,7 +278,7 @@ server started at ws://127.0.0.1:8766
 可选参数：
 
 ```bash
-MODEL_ID=my_model PORT=8777 bash scripts/run_server_cpu.sh
+MODEL_ID=my_model PORT=0000 bash scripts/run_server_cpu.sh
 MODEL_ID=my_model NUM_THREADS=4 bash scripts/run_server_cpu.sh
 MODEL_ID=my_model DRY_RUN=1 bash scripts/run_server_cpu.sh
 ```
@@ -293,7 +287,7 @@ MODEL_ID=my_model DRY_RUN=1 bash scripts/run_server_cpu.sh
 
 | 参数 | 作用 |
 |---|---|
-| `PORT=8777` | 改 ASR WebSocket 端口 |
+| `PORT=0000` | 改 ASR WebSocket 端口 |
 | `NUM_THREADS=4` | 改 CPU 推理线程数 |
 | `DRY_RUN=1` | 只打印启动命令，不真正启动 |
 
@@ -320,10 +314,10 @@ bash scripts/run_wav_client.sh examples/sample_zh.wav
 bash scripts/run_wav_client.sh /path/to/test.wav
 ```
 
-如果 ASR 端口不是 `8766`：
+如果 ASR 端口不是 `0000`：
 
 ```bash
-SERVER_URI=ws://127.0.0.1:8777 bash scripts/run_wav_client.sh examples/sample_zh.wav
+SERVER_URI=ws://127.0.0.1:0000 bash scripts/run_wav_client.sh examples/sample_zh.wav
 ```
 
 ## 5. 如何交互到浏览器上
@@ -340,32 +334,32 @@ bash scripts/run_web_demo.sh
 正常输出：
 
 ```text
-Open http://127.0.0.1:7860
+Open http://127.0.0.1:0000
 ```
 
 浏览器打开：
 
 ```text
-http://127.0.0.1:7860
+http://127.0.0.1:0000
 ```
 
 页面操作：
 
 ```text
-1. 确认 WebSocket URL 是 ws://127.0.0.1:8766
+1. 确认 WebSocket URL 是 ws://127.0.0.1:0000
 2. 点击 Start
 3. 允许浏览器使用麦克风
 4. 开始说话
 5. 查看实时转写结果
 ```
 
-如果 ASR 服务端口改成了 `8777`，页面里的 WebSocket URL 也要改成：
+如果 ASR 服务端口改成了 `0000`，页面里的 WebSocket URL 也要改成：
 
 ```text
-ws://127.0.0.1:8777
+ws://127.0.0.1:0000
 ```
 
-如果 `7860` 被占用，可以换网页端口：
+如果 `0000` 被占用，可以换网页端口：
 
 ```bash
 WEB_PORT=7861 bash scripts/run_web_demo.sh
@@ -374,10 +368,10 @@ WEB_PORT=7861 bash scripts/run_web_demo.sh
 然后打开：
 
 ```text
-http://127.0.0.1:7861
+http://127.0.0.1:0000
 ```
 
-不要直接双击打开 `web/index.html`。请使用 `http://127.0.0.1:7860`，否则浏览器可能限制麦克风权限。
+不要直接双击打开 `web/index.html`。请使用 `http://127.0.0.1:0000`，否则浏览器可能限制麦克风权限。
 
 ## 6. 最短命令总结
 
@@ -407,5 +401,5 @@ bash scripts/run_web_demo.sh
 浏览器：
 
 ```text
-http://127.0.0.1:7860
+http://127.0.0.1:0000
 ```
