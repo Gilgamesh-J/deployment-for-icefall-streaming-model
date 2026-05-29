@@ -1,21 +1,21 @@
-# [入门项目] 本机 CPU 部署流式 ASR Demo
+# [入门项目] 本机 CPU 部署 icefall 流式 ASR 模型
 
-本文说明如何把已经导出的 streaming ASR ONNX 模型部署成本机 CPU demo，并在浏览器里实时交互。
+本文说明如何从 GitHub 获取部署代码，把自己导出的 icefall streaming ASR ONNX 模型部署成本机 CPU demo，并在浏览器中实时交互。
 
-完成后会得到：
+最终会启动两个本机服务：
 
 ```text
 ASR WebSocket: ws://127.0.0.1:8766
-浏览器页面:     http://127.0.0.1:7860
+Browser demo:  http://127.0.0.1:7860
 ```
 
 ## 1. Quick Start
 
-建议先把部署代码放到一个 GitHub 仓库中，使用者直接 clone：
+下载部署代码：
 
 ```bash
-git clone <your-github-repo-url> local_cpu_asr_demo
-cd local_cpu_asr_demo
+git clone https://github.com/Gilgamesh-J/deployment-for-icefall-streaming-model.git
+cd deployment-for-icefall-streaming-model
 ```
 
 安装本机 CPU 环境：
@@ -24,7 +24,7 @@ cd local_cpu_asr_demo
 bash scripts/install_cpu_env.sh
 ```
 
-导入一个模型：
+导入模型：
 
 ```bash
 bash scripts/add_model.sh \
@@ -39,10 +39,10 @@ bash scripts/add_model.sh \
 MODEL_ID=my_model bash scripts/run_server_cpu.sh
 ```
 
-另开一个终端，启动网页：
+另开一个终端，启动浏览器页面：
 
 ```bash
-cd local_cpu_asr_demo
+cd deployment-for-icefall-streaming-model
 bash scripts/run_web_demo.sh
 ```
 
@@ -52,7 +52,7 @@ bash scripts/run_web_demo.sh
 http://127.0.0.1:7860
 ```
 
-页面中 WebSocket 地址保持：
+确认页面里的 WebSocket URL 是：
 
 ```text
 ws://127.0.0.1:8766
@@ -62,33 +62,38 @@ ws://127.0.0.1:8766
 
 ## 2. 需要什么文件
 
-部署需要两类文件：部署代码和模型文件。
+需要两类文件：
+
+```text
+部署代码
+模型文件
+```
 
 ### 2.1 部署代码
 
-建议用 GitHub 仓库统一分发。仓库里至少需要包含：
+部署代码来自 GitHub：
 
 ```text
-local_cpu_asr_demo/
+https://github.com/Gilgamesh-J/deployment-for-icefall-streaming-model
+```
+
+仓库包含：
+
+```text
+deployment-for-icefall-streaming-model/
 ├── server/
 ├── scripts/
 ├── web/
 ├── examples/
-├── requirements.txt
+├── models/
 ├── models.json
-└── README.md
+├── requirements.txt
+├── README.md
+├── MODEL_EXPANSION.md
+└── NOTION_LOCAL_CPU_TUTORIAL.md
 ```
 
-其中：
-
-| 路径 | 作用 |
-|---|---|
-| `server/` | ASR WebSocket 服务和 sherpa-onnx 推理封装 |
-| `scripts/` | 安装环境、导入模型、启动服务、启动网页 |
-| `web/` | 浏览器实时 demo 页面 |
-| `examples/` | WAV 测试音频 |
-| `requirements.txt` | Python 依赖 |
-| `models.json` | 模型注册表 |
+仓库不包含大模型 ONNX 文件。模型需要使用者自己准备，并通过 `scripts/add_model.sh` 导入。
 
 ### 2.2 模型文件
 
@@ -116,29 +121,18 @@ my_streaming_model/
 
 ```text
 encoder / decoder / joiner / tokens 必须来自同一套模型
-不要混用不同模型的 tokens.txt
+不要混用其他模型的 tokens.txt
 ONNX 文件不能是 Git LFS pointer
 ```
 
-如果 `.onnx` 只有几百字节或几 KB，通常不是完整模型。真实 encoder ONNX 往往会明显大于 1MB，常见是几十 MB 到几百 MB。
+如果 `.onnx` 只有几百字节或几 KB，通常不是完整模型，而是 Git LFS pointer 或下载不完整的文件。
 
-## 3. 部署结构
+## 3. 仓库结构
 
-推荐目录结构如下：
+核心结构如下：
 
 ```text
-local_cpu_asr_demo/
-├── model/
-│   ├── encoder.onnx
-│   ├── decoder.onnx
-│   ├── joiner.onnx
-│   └── tokens.txt
-├── models/
-│   └── my_model/
-│       ├── encoder.onnx
-│       ├── decoder.onnx
-│       ├── joiner.onnx
-│       └── tokens.txt
+deployment-for-icefall-streaming-model/
 ├── server/
 │   ├── sherpa_streaming_infer.py
 │   ├── sherpa_streaming_server.py
@@ -158,39 +152,49 @@ local_cpu_asr_demo/
 ├── examples/
 │   ├── sample_zh.wav
 │   └── sample_en.wav
-├── requirements.txt
+├── models/
+│   └── .gitkeep
 ├── models.json
-└── README.md
+└── requirements.txt
 ```
 
-核心文件说明：
+文件职责：
 
 | 文件 | 作用 |
 |---|---|
-| `server/sherpa_streaming_server.py` | 启动 WebSocket ASR 服务 |
-| `server/sherpa_streaming_infer.py` | 调用 sherpa-onnx 执行推理 |
-| `server/sherpa_streaming_client.py` | 用 WAV 文件测试服务 |
-| `web/index.html` | 浏览器麦克风 demo |
+| `server/sherpa_streaming_server.py` | WebSocket ASR 服务 |
+| `server/sherpa_streaming_infer.py` | sherpa-onnx 推理封装 |
+| `server/sherpa_streaming_client.py` | WAV 文件测试客户端 |
+| `web/index.html` | 浏览器麦克风实时 demo |
 | `scripts/install_cpu_env.sh` | 创建 `.venv` 并安装依赖 |
-| `scripts/add_model.sh` | 把模型复制进 `models/` 并写入 `models.json` |
-| `scripts/run_server_cpu.sh` | 启动某个模型的 CPU ASR 服务 |
+| `scripts/check_env.py` | 检查 Python 依赖和部署文件 |
+| `scripts/add_model.sh` | 导入模型并更新 `models.json` |
+| `scripts/list_models.sh` | 查看已注册模型 |
+| `scripts/run_server_cpu.sh` | 启动 CPU ASR WebSocket |
+| `scripts/run_wav_client.sh` | 用 WAV 测试 ASR 服务 |
 | `scripts/run_web_demo.sh` | 启动本地网页服务 |
-| `models.json` | 记录所有可启动模型 |
+| `models.json` | 模型注册表，初始为空 |
 
-`model/` 可以放一个默认模型。新增模型统一放到：
+模型导入后会被复制到：
 
 ```text
 models/<model_id>/
+├── encoder.onnx
+├── decoder.onnx
+├── joiner.onnx
+└── tokens.txt
 ```
+
+这些本地模型文件默认被 `.gitignore` 忽略，不会被提交到 GitHub。
 
 ## 4. 如何部署
 
 ### 4.1 安装环境
 
-进入部署仓库：
+进入仓库：
 
 ```bash
-cd local_cpu_asr_demo
+cd deployment-for-icefall-streaming-model
 ```
 
 安装：
@@ -199,14 +203,14 @@ cd local_cpu_asr_demo
 bash scripts/install_cpu_env.sh
 ```
 
-安装完成后检查：
+检查：
 
 ```bash
 source .venv/bin/activate
 python scripts/check_env.py
 ```
 
-看到类似下面输出即可：
+正常情况下会看到：
 
 ```text
 package numpy: ok
@@ -215,7 +219,10 @@ package soundfile: ok
 package librosa: ok
 package sherpa_onnx: ok
 file models.json: ok
+registry models: empty; add one with scripts/add_model.sh
 ```
+
+这里出现 `registry models: empty` 是正常的，因为 GitHub 仓库默认不包含模型。
 
 ### 4.2 导入模型
 
@@ -225,7 +232,7 @@ file models.json: ok
 /path/to/your_model_dir
 ```
 
-执行：
+导入：
 
 ```bash
 bash scripts/add_model.sh \
@@ -234,29 +241,28 @@ bash scripts/add_model.sh \
   --label "My ASR Model"
 ```
 
-导入后会生成：
-
-```text
-models/my_model/
-├── encoder.onnx
-├── decoder.onnx
-├── joiner.onnx
-└── tokens.txt
-```
-
-并更新：
-
-```text
-models.json
-```
-
-查看已导入模型：
+导入完成后查看模型：
 
 ```bash
 bash scripts/list_models.sh
 ```
 
-### 4.3 启动 ASR 服务
+如果这是第一个导入的模型，它会自动成为默认模型。
+
+如果源目录里有多个候选文件，可以显式指定：
+
+```bash
+bash scripts/add_model.sh \
+  --source-dir /path/to/your_model_dir \
+  --model-id my_model \
+  --label "My ASR Model" \
+  --tokens tokens.txt \
+  --encoder encoder-iter-96000-avg-3-chunk-48-left-256.onnx \
+  --decoder decoder-iter-96000-avg-3-chunk-48-left-256.onnx \
+  --joiner joiner-iter-96000-avg-3-chunk-48-left-256.onnx
+```
+
+### 4.3 启动 ASR WebSocket
 
 启动指定模型：
 
@@ -275,24 +281,28 @@ server started at ws://127.0.0.1:8766
 
 这个终端不要关闭。
 
-如果想换端口：
+可选参数：
 
 ```bash
 MODEL_ID=my_model PORT=8777 bash scripts/run_server_cpu.sh
-```
-
-如果想增加 CPU 线程：
-
-```bash
 MODEL_ID=my_model NUM_THREADS=4 bash scripts/run_server_cpu.sh
+MODEL_ID=my_model DRY_RUN=1 bash scripts/run_server_cpu.sh
 ```
+
+含义：
+
+| 参数 | 作用 |
+|---|---|
+| `PORT=8777` | 改 ASR WebSocket 端口 |
+| `NUM_THREADS=4` | 改 CPU 推理线程数 |
+| `DRY_RUN=1` | 只打印启动命令，不真正启动 |
 
 ### 4.4 用 WAV 文件测试
 
 另开一个终端：
 
 ```bash
-cd local_cpu_asr_demo
+cd deployment-for-icefall-streaming-model
 bash scripts/run_wav_client.sh examples/sample_zh.wav
 ```
 
@@ -304,10 +314,16 @@ bash scripts/run_wav_client.sh examples/sample_zh.wav
 [SERVER] {'type': 'final', 'text': '...'}
 ```
 
-也可以测试自己的音频：
+测试自己的 WAV：
 
 ```bash
 bash scripts/run_wav_client.sh /path/to/test.wav
+```
+
+如果 ASR 端口不是 `8766`：
+
+```bash
+SERVER_URI=ws://127.0.0.1:8777 bash scripts/run_wav_client.sh examples/sample_zh.wav
 ```
 
 ## 5. 如何交互到浏览器上
@@ -317,7 +333,7 @@ bash scripts/run_wav_client.sh /path/to/test.wav
 另开一个终端：
 
 ```bash
-cd local_cpu_asr_demo
+cd deployment-for-icefall-streaming-model
 bash scripts/run_web_demo.sh
 ```
 
@@ -363,45 +379,13 @@ http://127.0.0.1:7861
 
 不要直接双击打开 `web/index.html`。请使用 `http://127.0.0.1:7860`，否则浏览器可能限制麦克风权限。
 
-## 6. GitHub 仓库建议
+## 6. 最短命令总结
 
-因为部署需要同步多个脚本、网页文件和 server 文件，建议单独维护一个 GitHub 仓库，例如：
-
-```text
-local_cpu_asr_demo/
-├── server/
-├── scripts/
-├── web/
-├── examples/
-├── requirements.txt
-├── models.json
-├── README.md
-└── NOTION_LOCAL_CPU_TUTORIAL.md
-```
-
-建议不要把大模型 ONNX 直接放进普通 Git 仓库。可以选择：
-
-```text
-方案 A：GitHub 仓库只放部署代码，模型从 Hugging Face / 网盘下载
-方案 B：使用 Git LFS 管理 ONNX 大文件
-方案 C：每个模型单独发布，部署仓库只提供 add_model.sh 导入方式
-```
-
-更推荐方案 A 或 C。这样仓库更轻，使用者 clone 后只需要：
+终端 1：
 
 ```bash
-git clone <your-github-repo-url> local_cpu_asr_demo
-cd local_cpu_asr_demo
-bash scripts/install_cpu_env.sh
-bash scripts/add_model.sh --source-dir /path/to/model --model-id my_model --label "My ASR Model"
-MODEL_ID=my_model bash scripts/run_server_cpu.sh
-```
-
-## 7. 最短命令总结
-
-```bash
-git clone <your-github-repo-url> local_cpu_asr_demo
-cd local_cpu_asr_demo
+git clone https://github.com/Gilgamesh-J/deployment-for-icefall-streaming-model.git
+cd deployment-for-icefall-streaming-model
 
 bash scripts/install_cpu_env.sh
 
@@ -413,14 +397,14 @@ bash scripts/add_model.sh \
 MODEL_ID=my_model bash scripts/run_server_cpu.sh
 ```
 
-另一个终端：
+终端 2：
 
 ```bash
-cd local_cpu_asr_demo
+cd deployment-for-icefall-streaming-model
 bash scripts/run_web_demo.sh
 ```
 
-浏览器打开：
+浏览器：
 
 ```text
 http://127.0.0.1:7860
