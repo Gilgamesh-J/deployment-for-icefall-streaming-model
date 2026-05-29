@@ -77,6 +77,13 @@ ws://127.0.0.1:0000
 
 点击 `Start`，允许麦克风权限，即可开始实时识别。
 
+页面支持两种输入：
+
+```text
+Microphone：实时麦克风识别
+Audio file：上传本地音频文件，并通过同一个 WebSocket 流式发送
+```
+
 ### 1.2 Windows 原生 PowerShell
 
 打开 PowerShell：
@@ -117,6 +124,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
 然后在浏览器打开上文的 Browser demo 地址，并确认 WebSocket URL 和 ASR WebSocket 地址一致。
+
+页面支持 `Microphone` 和 `Audio file` 两种输入方式。
 
 ## 2. 需要什么文件
 
@@ -445,10 +454,11 @@ http://127.0.0.1:0000
 
 ```text
 1. 确认 WebSocket URL 是 ws://127.0.0.1:0000
-2. 点击 Start
-3. 允许浏览器使用麦克风
-4. 开始说话
-5. 查看实时转写结果
+2. 选择 Microphone 或 Audio file
+3. 点击 Start
+4. 如果使用麦克风，允许浏览器使用麦克风
+5. 如果使用文件，选择或拖入本地音频文件
+6. 查看实时转写结果
 ```
 
 如果 ASR 服务端口改成了 `0000`，页面里的 WebSocket URL 也要改成：
@@ -470,6 +480,8 @@ http://127.0.0.1:0000
 ```
 
 不要直接双击打开 `web/index.html`。请使用 `http://127.0.0.1:0000`，否则浏览器可能限制麦克风权限。
+
+Transcript 方框可以上滑查看历史内容。如果你已经上滑，新文字不会强行把方框拉回最新位置；点击 `Jump to latest` 可以恢复自动跟随。
 
 Windows 原生 PowerShell 对应命令：
 

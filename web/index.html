@@ -3,208 +3,553 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Local CPU Streaming ASR Demo</title>
+    <title>Local Streaming ASR Demo</title>
     <style>
       :root {
-        color-scheme: light;
-        --bg: #f6efe4;
-        --ink: #19231f;
-        --muted: #66736d;
-        --card: rgba(255, 252, 246, 0.88);
-        --line: rgba(36, 51, 45, 0.16);
-        --accent: #2f7d68;
-        --accent-2: #d8843d;
+        color-scheme: dark;
+        --bg: #07131f;
+        --bg-2: #0d2233;
+        --ink: #eef6ff;
+        --muted: #94aac0;
+        --soft: #c8d8e8;
+        --line: rgba(151, 188, 219, 0.2);
+        --panel: rgba(11, 25, 40, 0.76);
+        --panel-2: rgba(21, 40, 59, 0.72);
+        --field: rgba(5, 16, 28, 0.74);
+        --accent: #48d5b5;
+        --accent-2: #6aa9ff;
+        --accent-3: #f0b76a;
+        --danger: #ff7a7a;
+        --shadow: rgba(0, 0, 0, 0.38);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html {
+        min-height: 100%;
+        background: var(--bg);
+      }
+
       body {
-        margin: 0;
         min-height: 100vh;
-        font-family: ui-serif, Georgia, "Times New Roman", serif;
+        margin: 0;
         color: var(--ink);
+        font-family:
+          "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         background:
-          radial-gradient(circle at 12% 12%, rgba(216, 132, 61, 0.28), transparent 34rem),
-          radial-gradient(circle at 82% 18%, rgba(47, 125, 104, 0.24), transparent 30rem),
-          linear-gradient(135deg, #f6efe4 0%, #edf3ec 100%);
+          radial-gradient(circle at 12% 8%, rgba(72, 213, 181, 0.2), transparent 26rem),
+          radial-gradient(circle at 84% 16%, rgba(106, 169, 255, 0.22), transparent 28rem),
+          radial-gradient(circle at 50% 110%, rgba(240, 183, 106, 0.18), transparent 28rem),
+          linear-gradient(145deg, #07131f 0%, #0b1828 48%, #0a1422 100%);
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        content: "";
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.65), transparent 78%);
       }
 
       main {
-        width: min(980px, calc(100vw - 32px));
+        width: min(1180px, calc(100vw - 28px));
         margin: 0 auto;
-        padding: 56px 0;
+        padding: 34px 0 42px;
       }
 
       .hero {
         display: grid;
-        gap: 20px;
-        margin-bottom: 28px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 22px;
+      }
+
+      .eyebrow {
+        width: max-content;
+        margin-bottom: 14px;
+        border: 1px solid rgba(72, 213, 181, 0.3);
+        border-radius: 999px;
+        padding: 8px 12px;
+        color: var(--accent);
+        background: rgba(72, 213, 181, 0.08);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
       }
 
       h1 {
+        max-width: 820px;
         margin: 0;
-        font-size: clamp(40px, 8vw, 82px);
-        line-height: 0.92;
-        letter-spacing: -0.055em;
+        font-size: clamp(42px, 7vw, 86px);
+        line-height: 1;
+        letter-spacing: -0.06em;
       }
 
-      p {
-        margin: 0;
+      .hero p {
+        margin: 18px 0 0;
+        max-width: 760px;
         color: var(--muted);
-        font-size: 18px;
+        font-size: clamp(16px, 2vw, 19px);
+        line-height: 1.62;
+      }
+
+      .mini-card {
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 20px;
+        background: linear-gradient(145deg, rgba(11, 25, 40, 0.74), rgba(18, 42, 61, 0.52));
+        box-shadow: 0 28px 70px var(--shadow);
+        backdrop-filter: blur(20px);
+      }
+
+      .mini-title {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .mini-value {
+        margin-top: 12px;
+        color: var(--soft);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 14px;
         line-height: 1.6;
+        word-break: break-all;
+      }
+
+      .demo-shell {
+        display: grid;
+        grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+        gap: 20px;
       }
 
       .panel {
         border: 1px solid var(--line);
-        border-radius: 28px;
-        padding: 26px;
-        background: var(--card);
-        box-shadow: 0 30px 80px rgba(40, 45, 38, 0.14);
-        backdrop-filter: blur(18px);
-      }
-
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 22px;
-      }
-
-      button,
-      input {
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 12px 18px;
-        font: inherit;
-        background: rgba(255, 255, 255, 0.68);
-        color: var(--ink);
-      }
-
-      button {
-        cursor: pointer;
-        font-weight: 700;
-      }
-
-      button.primary {
-        color: white;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--accent), #1e5e50);
-      }
-
-      button.stop {
-        color: white;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--accent-2), #a54d2f);
-      }
-
-      button:disabled {
-        cursor: not-allowed;
-        opacity: 0.48;
-      }
-
-      input {
-        min-width: 260px;
-        flex: 1;
-      }
-
-      .status {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 20px;
-      }
-
-      .pill {
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 8px 12px;
-        color: var(--muted);
-        background: rgba(255, 255, 255, 0.52);
-        font-size: 14px;
-      }
-
-      .meter {
-        height: 14px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: rgba(25, 35, 31, 0.08);
-        margin-bottom: 22px;
-      }
-
-      .meter > div {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, var(--accent), var(--accent-2));
-        transition: width 80ms linear;
-      }
-
-      .transcript {
-        min-height: 260px;
-        max-height: 52vh;
-        overflow: auto;
-        border: 1px solid var(--line);
-        border-radius: 22px;
+        border-radius: 30px;
         padding: 22px;
-        background: rgba(255, 255, 255, 0.58);
-        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        font-size: 22px;
-        line-height: 1.65;
-        white-space: pre-wrap;
+        background: var(--panel);
+        box-shadow: 0 26px 80px var(--shadow);
+        backdrop-filter: blur(22px);
       }
 
-      .label {
-        margin-bottom: 8px;
+      .control-panel {
+        align-self: start;
+      }
+
+      .section-label {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      label {
+        display: block;
+      }
+
+      input,
+      button {
+        font: inherit;
+      }
+
+      .endpoint-input {
+        width: 100%;
+        margin-bottom: 18px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 13px 14px;
+        color: var(--ink);
+        background: var(--field);
+        outline: none;
+      }
+
+      .endpoint-input:focus {
+        border-color: rgba(72, 213, 181, 0.72);
+        box-shadow: 0 0 0 4px rgba(72, 213, 181, 0.1);
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 18px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 7px;
+        background: rgba(0, 0, 0, 0.18);
+      }
+
+      .mode-btn,
+      .action-btn,
+      .latest-btn {
+        border: 0;
+        cursor: pointer;
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .mode-btn {
+        border-radius: 15px;
+        padding: 11px 10px;
+        background: transparent;
+        color: var(--muted);
+      }
+
+      .mode-btn.active {
+        color: #06131b;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      }
+
+      .file-panel {
+        margin-bottom: 18px;
+      }
+
+      .file-panel[hidden] {
+        display: none;
+      }
+
+      .drop-zone {
+        display: grid;
+        place-items: center;
+        min-height: 126px;
+        border: 1px dashed rgba(148, 170, 192, 0.46);
+        border-radius: 22px;
+        padding: 18px;
+        background:
+          radial-gradient(circle at 20% 15%, rgba(72, 213, 181, 0.12), transparent 12rem),
+          rgba(5, 16, 28, 0.46);
+        text-align: center;
+        transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+      }
+
+      .drop-zone.dragging {
+        border-color: var(--accent);
+        background: rgba(72, 213, 181, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .drop-zone input {
+        display: none;
+      }
+
+      .drop-title {
+        color: var(--soft);
+        font-weight: 850;
+      }
+
+      .drop-subtitle,
+      .file-meta {
+        margin-top: 7px;
         color: var(--muted);
         font-size: 13px;
-        font-family: ui-sans-serif, system-ui, sans-serif;
+        line-height: 1.45;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .action-btn {
+        border-radius: 18px;
+        padding: 14px 16px;
+        transition: transform 120ms ease, opacity 120ms ease;
+      }
+
+      .action-btn:active {
+        transform: translateY(1px);
+      }
+
+      .action-btn.primary {
+        color: #06131b;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      }
+
+      .action-btn.stop {
+        color: #1f0808;
+        background: linear-gradient(135deg, #ff9696, var(--danger));
+      }
+
+      .action-btn:disabled {
+        cursor: not-allowed;
+        filter: grayscale(0.36) saturate(0.65);
+        opacity: 0.34;
+        transform: none;
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .status-card {
+        min-height: 74px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 13px;
+        background: var(--panel-2);
+      }
+
+      .status-card span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .status-card strong {
+        display: block;
+        margin-top: 9px;
+        color: var(--ink);
+        font-size: 15px;
+        word-break: break-word;
+      }
+
+      .wave-panel {
+        margin-bottom: 18px;
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        padding: 18px;
+        background:
+          linear-gradient(135deg, rgba(72, 213, 181, 0.08), transparent 48%),
+          rgba(5, 16, 28, 0.5);
+      }
+
+      .wave-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
+        color: var(--muted);
+        font-size: 12px;
         font-weight: 800;
         letter-spacing: 0.12em;
         text-transform: uppercase;
+      }
+
+      .wave {
+        display: grid;
+        grid-template-columns: repeat(48, 1fr);
+        align-items: center;
+        height: 86px;
+        gap: 4px;
+      }
+
+      .wave span {
+        display: block;
+        height: 10%;
+        min-height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--accent-2), var(--accent));
+        opacity: 0.42;
+        transition: height 70ms linear, opacity 70ms linear;
+      }
+
+      .progress-track {
+        height: 8px;
+        margin-top: 14px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 170, 192, 0.16);
+      }
+
+      .progress-bar {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--accent-3));
+        transition: width 120ms linear;
+      }
+
+      .transcript-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 400px;
+      }
+
+      .transcript-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .latest-btn {
+        border: 1px solid rgba(72, 213, 181, 0.36);
+        border-radius: 999px;
+        padding: 8px 11px;
+        color: var(--accent);
+        background: rgba(72, 213, 181, 0.08);
+        font-size: 12px;
+      }
+
+      .latest-btn[hidden] {
+        display: none;
+      }
+
+      .transcript {
+        height: min(48vh, 430px);
+        min-height: 270px;
+        overflow: auto;
+        overscroll-behavior: contain;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 22px;
+        color: #edf7ff;
+        background: rgba(3, 13, 24, 0.62);
+        font-size: clamp(17px, 2vw, 20px);
+        line-height: 1.78;
+        white-space: pre-wrap;
+        scrollbar-color: rgba(106, 169, 255, 0.58) rgba(148, 170, 192, 0.12);
+      }
+
+      .hint {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 860px) {
+        main {
+          padding-top: 24px;
+        }
+
+        .hero,
+        .demo-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .status-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
     <main>
       <section class="hero">
-        <h1>Local CPU Streaming ASR</h1>
-        <p>
-          A minimal browser demo for the bundled sherpa-onnx WebSocket server.
-          Start the CPU ASR server first, then press Start and speak.
-        </p>
+        <div>
+          <div class="eyebrow">Local demo mode</div>
+          <h1>Low latency streaming ASR</h1>
+          <p>
+            A clean recording view for local CPU deployment. Use microphone input
+            for live speech, or upload an audio file and stream it through the
+            same WebSocket path.
+          </p>
+        </div>
+
+        <aside class="mini-card">
+          <div class="mini-title">Connection target</div>
+          <div class="mini-value">WebSocket ASR server<br />16 kHz mono PCM<br />100 ms chunks</div>
+        </aside>
       </section>
 
-      <section class="panel">
-        <div class="controls">
-          <input id="wsUrl" value="ws://127.0.0.1:8766" />
-          <button id="startBtn" class="primary">Start</button>
-          <button id="stopBtn" class="stop" disabled>Stop</button>
-        </div>
+      <section class="demo-shell">
+        <aside class="panel control-panel">
+          <div class="section-label">Endpoint</div>
+          <input id="wsUrl" class="endpoint-input" value="ws://127.0.0.1:8766" />
 
-        <div class="status">
-          <span class="pill">Status: <strong id="status">idle</strong></span>
-          <span class="pill">Audio: <strong>16 kHz mono int16 PCM</strong></span>
-          <span class="pill">Chunk: <strong>100 ms</strong></span>
-        </div>
+          <div class="section-label">Input mode</div>
+          <div class="segmented" role="group" aria-label="Input mode">
+            <button id="micModeBtn" class="mode-btn active" type="button">Microphone</button>
+            <button id="fileModeBtn" class="mode-btn" type="button">Audio file</button>
+          </div>
 
-        <div class="meter"><div id="level"></div></div>
+          <div id="filePanel" class="file-panel" hidden>
+            <label id="dropZone" class="drop-zone">
+              <input id="fileInput" type="file" accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg" />
+              <span>
+                <span class="drop-title">Choose or drop an audio file</span>
+                <span id="fileMeta" class="file-meta">WAV, MP3, M4A, FLAC, or OGG if your browser can decode it.</span>
+              </span>
+            </label>
+          </div>
 
-        <div class="label">Transcript</div>
-        <div id="transcript" class="transcript">Waiting for speech...</div>
+          <div class="actions">
+            <button id="startBtn" class="action-btn primary" type="button">Start</button>
+            <button id="stopBtn" class="action-btn stop" type="button" disabled>Stop</button>
+          </div>
+        </aside>
+
+        <section class="panel transcript-card">
+          <div class="status-grid">
+            <div class="status-card">
+              <span>Status</span>
+              <strong id="status">idle</strong>
+            </div>
+            <div class="status-card">
+              <span>Input</span>
+              <strong id="inputStatus">microphone</strong>
+            </div>
+            <div class="status-card">
+              <span>Chunk</span>
+              <strong>100 ms</strong>
+            </div>
+          </div>
+
+          <div class="wave-panel">
+            <div class="wave-header">
+              <span>Input level</span>
+              <span id="levelText">0%</span>
+            </div>
+            <div id="wave" class="wave" aria-hidden="true"></div>
+            <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+          </div>
+
+          <div class="transcript-top">
+            <div class="section-label">Transcript</div>
+            <button id="latestBtn" class="latest-btn" type="button" hidden>Jump to latest</button>
+          </div>
+          <div id="transcript" class="transcript">Waiting for speech...</div>
+          <p class="hint">
+            The transcript follows the latest text only while you are near the bottom.
+            Scroll up to review earlier text without being forced back down by new words.
+          </p>
+        </section>
       </section>
     </main>
 
     <script>
+      const SAMPLE_RATE = 16000;
+      const CHUNK_SIZE = 1600;
+      const CHUNK_MS = 100;
+      const FOLLOW_THRESHOLD_PX = 56;
+
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
       const statusEl = document.getElementById("status");
-      const levelEl = document.getElementById("level");
+      const inputStatusEl = document.getElementById("inputStatus");
+      const levelTextEl = document.getElementById("levelText");
+      const progressBar = document.getElementById("progressBar");
       const transcriptEl = document.getElementById("transcript");
+      const latestBtn = document.getElementById("latestBtn");
       const wsUrlEl = document.getElementById("wsUrl");
+      const micModeBtn = document.getElementById("micModeBtn");
+      const fileModeBtn = document.getElementById("fileModeBtn");
+      const filePanel = document.getElementById("filePanel");
+      const fileInput = document.getElementById("fileInput");
+      const dropZone = document.getElementById("dropZone");
+      const fileMeta = document.getElementById("fileMeta");
+      const waveEl = document.getElementById("wave");
 
       let ws = null;
       let audioContext = null;
@@ -214,21 +559,110 @@
       let inputBuffer = [];
       let finalText = "";
       let partialText = "";
+      let inputMode = "microphone";
+      let selectedFile = null;
+      let runId = 0;
+      let cancelRequested = false;
+      let closeAfterFinal = false;
+      let transcriptShouldFollow = true;
+      let wavePhase = 0;
+
+      const waveBars = Array.from({ length: 48 }, () => {
+        const bar = document.createElement("span");
+        waveEl.appendChild(bar);
+        return bar;
+      });
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
 
       function setStatus(text) {
         statusEl.textContent = text;
       }
 
-      function renderTranscript() {
+      function setInputStatus(text) {
+        inputStatusEl.textContent = text;
+      }
+
+      function isTranscriptNearBottom() {
+        const distance = transcriptEl.scrollHeight - transcriptEl.clientHeight - transcriptEl.scrollTop;
+        return distance <= FOLLOW_THRESHOLD_PX;
+      }
+
+      function updateLatestButton() {
+        latestBtn.hidden = transcriptShouldFollow || isTranscriptNearBottom();
+      }
+
+      function renderTranscript(options = {}) {
+        const shouldFollow = options.forceFollow || transcriptShouldFollow || isTranscriptNearBottom();
+        const previousScrollTop = transcriptEl.scrollTop;
         const text = [finalText, partialText].filter(Boolean).join("\n");
-        transcriptEl.textContent = text || "Listening...";
-        transcriptEl.scrollTop = transcriptEl.scrollHeight;
+        transcriptEl.textContent = text || (inputMode === "file" ? "Waiting for audio file..." : "Waiting for speech...");
+
+        if (shouldFollow) {
+          transcriptEl.scrollTop = transcriptEl.scrollHeight;
+          transcriptShouldFollow = true;
+        } else {
+          transcriptEl.scrollTop = previousScrollTop;
+        }
+        updateLatestButton();
+      }
+
+      function resetTranscript() {
+        finalText = "";
+        partialText = "";
+        transcriptShouldFollow = true;
+        renderTranscript({ forceFollow: true });
+      }
+
+      function setControls(active) {
+        startBtn.disabled = active || (inputMode === "file" && !selectedFile);
+        stopBtn.disabled = !active;
+        micModeBtn.disabled = active;
+        fileModeBtn.disabled = active;
+        wsUrlEl.disabled = active;
+      }
+
+      function setMode(mode) {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        inputMode = mode;
+        micModeBtn.classList.toggle("active", mode === "microphone");
+        fileModeBtn.classList.toggle("active", mode === "file");
+        filePanel.hidden = mode !== "file";
+        setInputStatus(mode === "file" ? "audio file" : "microphone");
+        progressBar.style.width = "0%";
+        setControls(false);
+        renderTranscript();
+      }
+
+      function setLevelFromSamples(samples) {
+        if (!samples || samples.length === 0) {
+          setLevel(0);
+          return;
+        }
+        let sum = 0;
+        for (let i = 0; i < samples.length; i += 1) {
+          sum += samples[i] * samples[i];
+        }
+        setLevel(Math.sqrt(sum / samples.length));
+      }
+
+      function setLevel(rms) {
+        const percent = Math.min(100, Math.round(rms * 520));
+        levelTextEl.textContent = `${percent}%`;
+        wavePhase += 0.35;
+        waveBars.forEach((bar, index) => {
+          const wave = Math.sin(index * 0.42 + wavePhase) * 0.5 + 0.5;
+          const shape = 8 + percent * (0.25 + wave * 0.75);
+          bar.style.height = `${Math.max(4, Math.min(100, shape))}%`;
+          bar.style.opacity = `${0.28 + Math.min(0.62, percent / 140)}`;
+        });
       }
 
       function downsampleTo16k(float32, inputRate) {
-        const targetRate = 16000;
-        if (inputRate === targetRate) return float32;
-        const ratio = inputRate / targetRate;
+        if (inputRate === SAMPLE_RATE) return float32;
+        const ratio = inputRate / SAMPLE_RATE;
         const outputLength = Math.floor(float32.length / ratio);
         const output = new Float32Array(outputLength);
         for (let i = 0; i < outputLength; i += 1) {
@@ -255,57 +689,28 @@
         return buffer;
       }
 
-      function pushSamples(samples) {
+      function sendSamples(samples) {
         for (let i = 0; i < samples.length; i += 1) inputBuffer.push(samples[i]);
-        const chunkSize = 1600;
-        while (inputBuffer.length >= chunkSize) {
-          const chunk = inputBuffer.splice(0, chunkSize);
+        while (inputBuffer.length >= CHUNK_SIZE) {
+          const chunk = inputBuffer.splice(0, CHUNK_SIZE);
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(floatToInt16(Float32Array.from(chunk)));
           }
         }
       }
 
-      async function start() {
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-        finalText = "";
-        partialText = "";
-        renderTranscript();
-        setStatus("connecting");
+      function flushRemainingSamples() {
+        if (!inputBuffer.length || !ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(floatToInt16(Float32Array.from(inputBuffer)));
+        inputBuffer = [];
+      }
 
-        ws = new WebSocket(wsUrlEl.value.trim());
-        ws.onopen = async () => {
-          ws.send(JSON.stringify({ type: "start", sample_rate: 16000 }));
-          setStatus("recording");
-
-          mediaStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              channelCount: 1,
-              echoCancellation: true,
-              noiseSuppression: false,
-              autoGainControl: true,
-            },
-          });
-
-          audioContext = new AudioContext();
-          source = audioContext.createMediaStreamSource(mediaStream);
-          processor = audioContext.createScriptProcessor(4096, 1, 1);
-          processor.onaudioprocess = (event) => {
-            const input = event.inputBuffer.getChannelData(0);
-            let sum = 0;
-            for (let i = 0; i < input.length; i += 1) sum += input[i] * input[i];
-            const rms = Math.sqrt(sum / input.length);
-            levelEl.style.width = `${Math.min(100, Math.round(rms * 500))}%`;
-            pushSamples(downsampleTo16k(input, audioContext.sampleRate));
-          };
-          source.connect(processor);
-          processor.connect(audioContext.destination);
-        };
-
+      function attachSocketHandlers(currentRunId) {
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          if (data.type === "partial") {
+          if (data.type === "started") {
+            setStatus(inputMode === "file" ? "streaming file" : "recording");
+          } else if (data.type === "partial") {
             partialText = data.text || "";
             renderTranscript();
           } else if (data.type === "final") {
@@ -313,41 +718,228 @@
             partialText = "";
             renderTranscript();
             setStatus("final");
+            if (closeAfterFinal && currentRunId === runId) {
+              setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+              }, 250);
+            }
           } else if (data.type === "error") {
             setStatus(`error: ${data.text}`);
           }
         };
 
         ws.onclose = () => {
+          if (currentRunId !== runId) return;
           if (statusEl.textContent !== "final") setStatus("closed");
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
+          setControls(false);
+          cleanupAudioNodes();
+          setLevel(0);
         };
 
-        ws.onerror = () => {
-          setStatus("websocket error");
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
+        ws.onerror = () => handleSocketError(currentRunId);
+      }
+
+      function handleSocketError(currentRunId) {
+        if (currentRunId !== runId) return;
+        setStatus("websocket error");
+        setControls(false);
+        cleanupAudioNodes();
+      }
+
+      function openSocket(currentRunId) {
+        return new Promise((resolve, reject) => {
+          ws = new WebSocket(wsUrlEl.value.trim());
+          attachSocketHandlers(currentRunId);
+          ws.onopen = () => {
+            ws.onerror = () => handleSocketError(currentRunId);
+            ws.send(JSON.stringify({ type: "start", sample_rate: SAMPLE_RATE }));
+            resolve();
+          };
+          ws.onerror = () => {
+            handleSocketError(currentRunId);
+            reject(new Error("WebSocket connection failed"));
+          };
+        });
+      }
+
+      function requestFinalAndClose() {
+        flushRemainingSamples();
+        closeAfterFinal = true;
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "end" }));
+          setStatus("finalizing");
+        }
+      }
+
+      async function startMicrophone(currentRunId) {
+        await openSocket(currentRunId);
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: true,
+          },
+        });
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextClass();
+        source = audioContext.createMediaStreamSource(mediaStream);
+        processor = audioContext.createScriptProcessor(4096, 1, 1);
+        processor.onaudioprocess = (event) => {
+          if (currentRunId !== runId || cancelRequested) return;
+          const input = event.inputBuffer.getChannelData(0);
+          setLevelFromSamples(input);
+          sendSamples(downsampleTo16k(input, audioContext.sampleRate));
         };
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+      }
+
+      async function decodeAudioFile(file) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContextClass();
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const decoded = await context.decodeAudioData(arrayBuffer.slice(0));
+          const mono = new Float32Array(decoded.length);
+          for (let channel = 0; channel < decoded.numberOfChannels; channel += 1) {
+            const data = decoded.getChannelData(channel);
+            for (let i = 0; i < data.length; i += 1) mono[i] += data[i] / decoded.numberOfChannels;
+          }
+          return downsampleTo16k(mono, decoded.sampleRate);
+        } finally {
+          if (context.state !== "closed") await context.close();
+        }
+      }
+
+      async function startFile(currentRunId) {
+        if (!selectedFile) {
+          setStatus("select a file first");
+          setControls(false);
+          return;
+        }
+
+        setStatus("decoding file");
+        const samples = await decodeAudioFile(selectedFile);
+        if (currentRunId !== runId || cancelRequested) return;
+
+        await openSocket(currentRunId);
+        setStatus("streaming file");
+
+        for (let offset = 0; offset < samples.length; offset += CHUNK_SIZE) {
+          if (currentRunId !== runId || cancelRequested) return;
+          const chunk = samples.subarray(offset, Math.min(offset + CHUNK_SIZE, samples.length));
+          setLevelFromSamples(chunk);
+          sendSamples(chunk);
+          progressBar.style.width = `${Math.round(((offset + chunk.length) / samples.length) * 100)}%`;
+          await sleep(CHUNK_MS);
+        }
+
+        requestFinalAndClose();
+      }
+
+      async function cleanupAudioNodes() {
+        if (processor) {
+          processor.disconnect();
+          processor = null;
+        }
+        if (source) {
+          source.disconnect();
+          source = null;
+        }
+        if (audioContext) {
+          await audioContext.close();
+          audioContext = null;
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+      }
+
+      async function start() {
+        runId += 1;
+        const currentRunId = runId;
+        cancelRequested = false;
+        closeAfterFinal = false;
+        inputBuffer = [];
+        progressBar.style.width = "0%";
+        resetTranscript();
+        setControls(true);
+        setStatus("connecting");
+
+        try {
+          if (inputMode === "file") {
+            await startFile(currentRunId);
+          } else {
+            await startMicrophone(currentRunId);
+          }
+        } catch (error) {
+          if (currentRunId !== runId) return;
+          setStatus(error.message || "failed");
+          setControls(false);
+          await cleanupAudioNodes();
+          if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+        }
       }
 
       async function stop() {
-        setStatus("stopping");
-        if (processor) processor.disconnect();
-        if (source) source.disconnect();
-        if (audioContext) await audioContext.close();
-        if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
-        levelEl.style.width = "0%";
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: "end" }));
-          setTimeout(() => ws.close(), 1200);
-        }
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+        cancelRequested = true;
+        await cleanupAudioNodes();
+        setLevel(0);
+        requestFinalAndClose();
+        setControls(false);
       }
 
+      function chooseFile(file) {
+        if (!file) return;
+        selectedFile = file;
+        const sizeMb = file.size / (1024 * 1024);
+        fileMeta.textContent = `${file.name} - ${sizeMb.toFixed(2)} MB`;
+        setInputStatus("audio file");
+        setControls(false);
+      }
+
+      transcriptEl.addEventListener("scroll", () => {
+        transcriptShouldFollow = isTranscriptNearBottom();
+        updateLatestButton();
+      });
+
+      latestBtn.addEventListener("click", () => {
+        transcriptShouldFollow = true;
+        renderTranscript({ forceFollow: true });
+      });
+
+      micModeBtn.addEventListener("click", () => setMode("microphone"));
+      fileModeBtn.addEventListener("click", () => setMode("file"));
       startBtn.addEventListener("click", start);
       stopBtn.addEventListener("click", stop);
+
+      fileInput.addEventListener("change", (event) => {
+        chooseFile(event.target.files[0]);
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropZone.classList.add("dragging");
+        });
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropZone.classList.remove("dragging");
+        });
+      });
+
+      dropZone.addEventListener("drop", (event) => {
+        chooseFile(event.dataTransfer.files[0]);
+      });
+
+      setMode("microphone");
+      setLevel(0);
     </script>
   </body>
 </html>

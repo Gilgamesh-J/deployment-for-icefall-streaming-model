@@ -26,7 +26,7 @@ It contains deployment code only. Large ONNX model files are intentionally not c
 | Capability | What is included |
 |---|---|
 | Local CPU inference | Runs streaming Zipformer transducer ONNX models with `sherpa-onnx` |
-| Browser demo | Microphone input, WebSocket streaming, live transcript display |
+| Browser demo | Demo-mode UI with microphone input, file upload, WebSocket streaming, and live transcript display |
 | File test client | Send a WAV file to the WebSocket server before opening the browser |
 | Model registry | Add, list, switch, and remove models through `models.json` |
 | Cross-platform scripts | Bash scripts for macOS/Linux/WSL2 and PowerShell scripts for native Windows |
@@ -69,6 +69,8 @@ Keep the page WebSocket URL as:
 ws://127.0.0.1:8766
 ```
 
+Choose `Microphone` for live speech, or choose `Audio file` to upload a local audio file and stream it through the same WebSocket path.
+
 ### Windows PowerShell
 
 ```powershell
@@ -99,6 +101,8 @@ Open:
 ```text
 http://127.0.0.1:7860
 ```
+
+Choose `Microphone` for live speech, or choose `Audio file` to upload a local audio file and stream it through the same WebSocket path.
 
 ## Model Files
 
@@ -272,6 +276,8 @@ Windows PowerShell:
 ```
 
 Do not open `web/index.html` directly with `file://`; browser microphone permissions may be blocked. Use `http://127.0.0.1:7860`.
+
+The transcript panel is scrollable. If you scroll up to review earlier text, new partial results will not force the panel back to the latest line. Use `Jump to latest` to resume auto-follow.
 
 ## Documentation
 
